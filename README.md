@@ -398,6 +398,18 @@ git commit -m "your change"
 git push origin main
 ```
 
+If you want the shortest version, just remember this:
+
+```bash
+git add .
+git commit -m "what changed"
+git push origin main
+```
+
+- `git add .` = put your current file changes into the save list
+- `git commit -m "..."` = save a version on your computer with a short note
+- `git push origin main` = upload that saved version to GitHub
+
 Pull updates from the original project, merge them into your fork, then push:
 
 ```bash

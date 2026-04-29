@@ -398,6 +398,18 @@ git commit -m "your change"
 git push origin main
 ```
 
+如果你只想记最简单版本，就记这 3 行：
+
+```bash
+git add .
+git commit -m "这次改了什么"
+git push origin main
+```
+
+- `git add .` = 把你当前改过的文件放进“待保存清单”
+- `git commit -m "..."` = 在你电脑里保存一个正式版本，并写一句备注
+- `git push origin main` = 把这个版本上传到 GitHub
+
 同步原作者更新，再推回你的 fork：
 
 ```bash
