@@ -361,6 +361,53 @@ start bridge
 - 守护进程是本地进程，没有入站网络监听
 - 详见 [SECURITY.md](SECURITY.md) 了解威胁模型和应急响应
 
+## Fork 维护
+
+如果你在维护自己的 fork，建议把这个仓库作为唯一来源，并让 Claude Code 已安装的 skill 目录通过符号链接指向这里。
+
+### 推荐本地结构
+
+```bash
+# 工作仓库
+~/Documents/04\ PM\ AI/projects/Claude-to-IM
+
+# Claude Code 实际使用的 skill 指向这里
+~/.claude/skills/claude-to-im-skill -> ~/Documents/04\ PM\ AI/projects/Claude-to-IM
+```
+
+### Remote 约定
+
+建议保留这两个 remote：
+
+```bash
+git remote -v
+# origin   git@github.com:<你的用户名>/Claude-to-IM-skill.git
+# upstream https://github.com/op7418/Claude-to-IM-skill.git
+```
+
+- `origin` = 你的 fork
+- `upstream` = 原作者仓库
+
+### 日常维护流程
+
+提交并推送你自己的修改：
+
+```bash
+git add .
+git commit -m "your change"
+git push origin main
+```
+
+同步原作者更新，再推回你的 fork：
+
+```bash
+git fetch upstream
+git merge upstream/main
+git push origin main
+```
+
+如果双方同时修改了同一批文件，先在这个仓库里解决冲突，再按需重新构建或测试。
+
 ## 开发
 
 ```bash

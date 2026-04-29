@@ -361,6 +361,53 @@ See [references/troubleshooting.md](references/troubleshooting.md) for more deta
 - The daemon is a local process with no inbound network listeners
 - See [SECURITY.md](SECURITY.md) for threat model and incident response
 
+## Fork Maintenance
+
+If you're maintaining your own fork, use this repo as the single source of truth and keep the installed Claude Code skill as a symlink to it.
+
+### Recommended local layout
+
+```bash
+# Working repo
+~/Documents/04\ PM\ AI/projects/Claude-to-IM
+
+# Claude Code installed skill points here
+~/.claude/skills/claude-to-im-skill -> ~/Documents/04\ PM\ AI/projects/Claude-to-IM
+```
+
+### Remote setup
+
+Keep these remotes:
+
+```bash
+git remote -v
+# origin   git@github.com:<your-username>/Claude-to-IM-skill.git
+# upstream https://github.com/op7418/Claude-to-IM-skill.git
+```
+
+- `origin` = your fork
+- `upstream` = the original project
+
+### Daily workflow
+
+Commit and push your own changes:
+
+```bash
+git add .
+git commit -m "your change"
+git push origin main
+```
+
+Pull updates from the original project, merge them into your fork, then push:
+
+```bash
+git fetch upstream
+git merge upstream/main
+git push origin main
+```
+
+If both sides changed the same files, resolve conflicts in this repo first, then rebuild or retest as needed.
+
 ## Development
 
 ```bash
