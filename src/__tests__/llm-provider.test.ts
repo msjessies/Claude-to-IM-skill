@@ -5,6 +5,7 @@ import {
   isAuthError,
   classifyAuthError,
   isNonClaudeModel,
+  normalizeClaudeModelForQuery,
   parseCliMajorVersion,
   handleMessage,
 } from '../llm-provider.js';
@@ -148,6 +149,44 @@ describe('isNonClaudeModel', () => {
   it('returns false for undefined/empty', () => {
     assert.equal(isNonClaudeModel(undefined), false);
     assert.equal(isNonClaudeModel(''), false);
+  });
+});
+
+// ── normalizeClaudeModelForQuery ──
+
+describe('normalizeClaudeModelForQuery', () => {
+  it('drops non-Claude models from persisted session state', () => {
+    const old = process.env.CTI_DEFAULT_MODEL;
+    delete process.env.CTI_DEFAULT_MODEL;
+    try {
+      assert.equal(normalizeClaudeModelForQuery('gpt-5.4'), undefined);
+      assert.equal(normalizeClaudeModelForQuery('gpt-5-codex'), undefined);
+    } finally {
+      if (old === undefined) delete process.env.CTI_DEFAULT_MODEL;
+      else process.env.CTI_DEFAULT_MODEL = old;
+    }
+  });
+
+  it('drops Claude models unless CTI_DEFAULT_MODEL explicitly pins one', () => {
+    const old = process.env.CTI_DEFAULT_MODEL;
+    delete process.env.CTI_DEFAULT_MODEL;
+    try {
+      assert.equal(normalizeClaudeModelForQuery('claude-sonnet-4-6'), undefined);
+    } finally {
+      if (old === undefined) delete process.env.CTI_DEFAULT_MODEL;
+      else process.env.CTI_DEFAULT_MODEL = old;
+    }
+  });
+
+  it('passes Claude model when CTI_DEFAULT_MODEL is set', () => {
+    const old = process.env.CTI_DEFAULT_MODEL;
+    process.env.CTI_DEFAULT_MODEL = 'claude-sonnet-4-6';
+    try {
+      assert.equal(normalizeClaudeModelForQuery('claude-opus-4-7'), 'claude-opus-4-7');
+    } finally {
+      if (old === undefined) delete process.env.CTI_DEFAULT_MODEL;
+      else process.env.CTI_DEFAULT_MODEL = old;
+    }
   });
 });
 

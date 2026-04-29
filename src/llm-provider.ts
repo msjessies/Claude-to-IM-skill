@@ -86,6 +86,20 @@ export function isNonClaudeModel(model?: string): boolean {
 }
 
 /**
+ * Normalize bridge/session model state before passing it to Claude CLI.
+ *
+ * Rules:
+ * - Non-Claude model names are ignored because Claude CLI cannot use them.
+ * - Even Claude model names are only forwarded when explicitly pinned via
+ *   CTI_DEFAULT_MODEL; otherwise let the local CLI choose its own default.
+ */
+export function normalizeClaudeModelForQuery(model?: string): string | undefined {
+  if (!model) return undefined;
+  if (isNonClaudeModel(model)) return undefined;
+  return process.env.CTI_DEFAULT_MODEL ? model : undefined;
+}
+
+/**
  * Build a clean env for the CLI subprocess.
  *
  * CTI_ENV_ISOLATION (default "inherit"):
@@ -444,22 +458,10 @@ export class SDKLLMProvider implements LLMProvider {
           try {
             const cleanEnv = buildSubprocessEnv();
 
-            // Cross-runtime migration safety: drop non-Claude model names
-            // that may linger in session data from a previous Codex runtime.
-            let model = params.model;
-            if (isNonClaudeModel(model)) {
-              console.warn(`[llm-provider] Ignoring non-Claude model "${model}", using CLI default`);
-              model = undefined;
-            }
-
-            // Only pass model to CLI if explicitly configured via CTI_DEFAULT_MODEL.
-            // Letting the CLI choose its own default avoids exit-code-1 failures
-            // when a stored model is inaccessible on the current machine/plan.
-            const passModel = !!process.env.CTI_DEFAULT_MODEL;
-            if (model && !passModel) {
-              console.log(`[llm-provider] Skipping model "${model}", using CLI default (set CTI_DEFAULT_MODEL to override)`);
-              model = undefined;
-            }
+            // Normalize model names from persisted bridge/session state.
+            // We intentionally let the local Claude CLI choose its own default
+            // unless CTI_DEFAULT_MODEL explicitly pins a Claude model.
+            const model = normalizeClaudeModelForQuery(params.model);
 
             const queryOptions: Record<string, unknown> = {
               cwd: params.workingDirectory,
@@ -468,6 +470,8 @@ export class SDKLLMProvider implements LLMProvider {
               abortController: params.abortController,
               permissionMode: (params.permissionMode as 'default' | 'acceptEdits' | 'plan') || undefined,
               includePartialMessages: true,
+              settingSources: ['user', 'project', 'local'],
+              tools: { type: 'preset', preset: 'claude_code' },
               env: cleanEnv,
               stderr: (data: string) => {
                 stderrBuf += data;
